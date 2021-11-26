@@ -1,68 +1,3 @@
-function traerInformacionClientes(){
-    $.ajax({    
-            url : 'http://129.151.123.56:8080/api/Client/all',
-            type : 'GET',
-            dataType : 'JSON',
-            
-            error : function(xhr, status) {
-                alert('ha sucedido un problema, '+xhr.status);
-            },
-            success : function(resultado) {
-                $("#resultado").empty();
-                tabla = "<center><table border='1'><tr><th>ID<th>Nombre<th>Email<th>Edad"
-                filas = ""
-                for(i = 0;  i < resultado.length; i++){
-                   filas += "<tr>"
-                   filas +="<td>"+resultado[i].idClient+"</td>"   
-                   filas +="<td>"+resultado[i].name+"</td>" 
-                   filas +="<td>"+resultado[i].email+"</td>" 
-                   filas +="<td>"+resultado[i].age+"</td>" 
-                   /*filas +="<td><button onclick='eliminarCliente("+resultado[i].id+")'>Eliminar</button>"
-                   filas += "<button onclick='actualizarCliente("+resultado[i].id+")'>Actualizar</button>"*/
-                }
-                $("#resultado").append(tabla + filas+"</tr></table></center>")
-                console.log(resultado)
-            }
-        });
-}
-
-function buscarPorIDClientes(id){
-    if(!validarCampo(id))
-        alert("Primero ingrese un dato en el campo "+id.attr("id"))
-    else{
-        $.ajax({    
-            url : 'http://129.151.123.56:8080/api/Client/'+id.val(),
-            dataType : 'JSON',
-            type : 'GET',
-            success : function(resultado) {
-                tabla = "<center><table border='1'><tr><th>ID<th>Nombre<th>Email<th>Edad"
-                filas =""
-                if(resultado){
-                    console.log(resultado)
-                    $("#resultado").empty();
-                    filas += "<tr>"
-                    filas +="<td>"+resultado.idClient+"</td>"   
-                    filas +="<td>"+resultado.name+"</td>" 
-                    filas +="<td>"+resultado.email+"</td>" 
-                    filas +="<td>"+resultado.age+"</td>" 
-                    /*filas +="<td><button onclick='eliminarCliente("+resultado.items[0].id+")'>Eliminar</button>"
-                    filas += "<button onclick='actualizarCliente("+resultado.items[0].id+")'>Actualizar</button>"*/
-                    $("#resultado").append(tabla + filas+"</tr></table></center>")  
-                }
-                else{
-                    alert("Client con ID "+id.val()+" no existe")
-                }
-            },
-            error : function(xhr, status) {
-                alert('ha sucedido un problema'+ xhr.status);
-            },
-            complete : function(xhr, status) {
-                alert('Petición realizada '+xhr.status);
-            }
-        });
-    }
-}
-
 function guardarUsuario(){ 
 var datos ={ 
         email: $("#email").val(),
@@ -70,108 +5,139 @@ var datos ={
         name: $("#name").val()
      }
 
-    $.ajax({    
-        url : 'http://129.151.123.56:8080/api/user/new',
-        data : JSON.stringify(datos),
-        type : 'POST',
-        contentType: 'application/json',
-        dataType: 'JSON',
-        success : function(json, textStatus, xhr) {
+    var validar = [$("#email").val(), $("#password").val(), $("#name").val(), $("#con_password").val()] 
+
+    if(!validarCampos(validar))
+        Swal.fire({
+                    position: 'center',
+                    icon: 'error',
+                    title: 'Todos los campos son requeridos',
+                    showConfirmButton: true,
+                    confirmButtonText: 'Aceptar',
+                    confirmButtonColor: '#0D6EFD'
+                })
+    else{ 
+
+        if(validar[1]==validar[3]){
+            $.ajax({    
+                url : 'http://129.151.123.56:8080/api/user/'+$("#email").val(),
+                dataType : 'JSON',
+                type : 'GET',
+                success : function(resultado) {
     
-        
-        },
-        error : function(xhr, status) {
-           
-            
-        },
-        complete : function(xhr, status) {
-            alert('Petición realizada '+xhr.status);
-            limpiarFormulario();
-            //window.location.href="clientes.html";
-        }
-    });
-}
+                    if(!resultado){
+                        $.ajax({    
+                            url : 'http://129.151.123.56:8080/api/user/new',
+                            data : JSON.stringify(datos),
+                            type : 'POST',
+                            contentType: 'application/json',
+                            dataType: 'JSON',
+                            success : function(json, textStatus, xhr) {
+                        
+                            
+                            },
+                            error : function(xhr, status) {
+                               
+                                
+                            },
+                            complete : function(xhr, status) {
+                                    Swal.fire({
+                                        position: 'center',
+                                        icon: 'success',
+                                        title: 'Usuario registrado correctamente',
+                                        showConfirmButton: true,
+                                        confirmButtonText: 'Iniciar Sesión',
+                                        confirmButtonColor: '#157347'
+                                    }).then((result) => {
+                                        limpiarFormulario();
+                                        window.location.href="index.html";
+                                      })
+                                
+                            }
+                        });
+                    }else{
+                        Swal.fire({
+                            position: 'center',
+                            icon: 'error',
+                            title: 'El Email ingresado ya existe, por favor intente con otro',
+                            showConfirmButton: true,
+                            confirmButtonText: 'Aceptar',
+                            confirmButtonColor: '#0D6EFD'
+                        })
+                    }
+                    
+                },
+                error : function(xhr, status) {
+                    alert('ha sucedido un problema'+ xhr.status);
+                },
+                complete : function(xhr, status) {
+                    //alert('Petición realizada '+xhr.status);
+                }
+            });
+                
 
-function eliminarCliente(idCliente){
-    var datos={id:idCliente}
-    console.log(idCliente);
+        }else{
+            Swal.fire({
+                position: 'center',
+                icon: 'error',
+                title: 'Las contraseñas no coinciden',
+                showConfirmButton: true,
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#0D6EFD'
+            })
+        }
+
     
-    $.ajax({    
-        url : 'https://g1a87438372da7f-database1.adb.sa-santiago-1.oraclecloudapps.com/ords/admin/client/client',
-        data: JSON.stringify(datos),
-        contentType: 'application/json',
-        dataType: 'text',
-        type : 'DELETE',
-        success : function(json, textStatus, xhr) {
-    
-        
-        },
-        error : function(xhr, status) {
-           
-            
-        },
-        complete : function(xhr, status) {
-            alert('Petición realizada '+xhr.status);
-        }
-    }); 
-    window.location.href="clientes.html";   
-}
 
-function actualizarCliente(idClient){
-    console.log(idClient)
-    location.href="actualizarClientes.html?variable="+idClient+"";
-}
-
-function cargarDatosCliente(id){
-    $.ajax({    
-        url : 'https://g1a87438372da7f-database1.adb.sa-santiago-1.oraclecloudapps.com/ords/admin/client/client/'+id,
-        dataType : 'JSON',
-        type : 'GET',
-        success : function(resultado) {
-            $("#id").val(resultado.items[0].id)  
-            $("#name").val(resultado.items[0].name)
-            $("#email").val(resultado.items[0].email)
-            $("#age").val(resultado.items[0].age) 
-        },
-        error : function(xhr, status) {
-            alert('ha sucedido un problema'+ xhr.status);
-        }
-    });
-}
-
-function editarCliente(){ 
-var datos={
-        id:$("#id").val(),
-        name: $("#name").val(),
-        email: $("#email").val(),
-        age: $("#age").val()
     }
-
-$.ajax({    
-    url : 'https://g1a87438372da7f-database1.adb.sa-santiago-1.oraclecloudapps.com/ords/admin/client/client',
-    data: JSON.stringify(datos),
-    contentType: 'application/json',
-    dataType: 'text',
-    type : 'PUT',
-    dataType: 'JSON',
-    success : function(json, textStatus, xhr) {
-
-    
-    },
-    error : function(xhr, status) {
-       
-        
-    },
-    complete : function(xhr, status) {
-        alert('Petición realizada '+xhr.status);
-        limpiarFormulario();
-        window.location.href="clientes.html";
-    }
-});
 }
 
-function validarCampo(campo){
-    if(campo.val() != "")
+function verificarUsuario(){
+
+    var validar = [$("#email").val(), $("#password").val()] 
+
+    if(!validarCampos(validar))
+        Swal.fire({
+                    position: 'center',
+                    icon: 'error',
+                    title: 'Todos los campos son requeridos',
+                    showConfirmButton: true,
+                    confirmButtonText: 'Aceptar',
+                    confirmButtonColor: '#0D6EFD'
+                })
+    else{ 
+
+        $.ajax({    
+            url : 'http://129.151.123.56:8080/api/user/'+validar[0]+'/'+validar[1],
+            type : 'GET',
+            dataType : 'JSON',
+            
+            error : function(xhr, status) {
+                alert('ha sucedido un problema, '+xhr.status);
+            },
+            success : function(resultado) {
+                console.log(resultado.id)
+                if(resultado.id==null){
+                    console.log("no existe")
+                    Swal.fire({
+                        position: 'center',
+                        icon: 'error',
+                        title: 'Usuario o contraseña incorrecto',
+                        showConfirmButton: true,
+                        confirmButtonText: 'Aceptar',
+                        confirmButtonColor: '#0D6EFD'
+                    })
+                }else{
+                    limpiarFormulario();
+                    window.location.href="inicio.html";
+                }
+            }
+        });
+    }
+}
+
+function validarCampos(campo){
+    if(campo[0]!= "" && campo[1]!= "" && campo[2]!= "" && campo[3]!= "")
         return true
     else
         return false;
